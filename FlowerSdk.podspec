@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'FlowerSdk'
-  s.version          = '1.1.13'
+  s.version          = '1.1.14'
   s.summary          = 'Flower SDK for iOS'
 
 # This description is used to generate tags and improve search results.
