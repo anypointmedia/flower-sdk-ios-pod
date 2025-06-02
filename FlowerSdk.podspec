@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'FlowerSdk'
-  s.version          = '1.1.15'
+  s.version          = '2.0.0'
   s.summary          = 'Flower SDK for iOS'
 
 # This description is used to generate tags and improve search results.
@@ -32,7 +32,7 @@ Pod::Spec.new do |s|
   s.vendored_frameworks = 'ios-sdk/Frameworks/sdk_core.xcframework'
 
   s.default_subspec = :none
-  s.subspec 'MobileVLCKit3' do |mobile_vlc_kit|
-    mobile_vlc_kit.dependency 'MobileVLCKit', '>3.0.0'
+  s.subspec 'MobileVLCKit3' do |subspec|
+    subspec.dependency 'MobileVLCKit', '>3.3.0'
   end
 end
