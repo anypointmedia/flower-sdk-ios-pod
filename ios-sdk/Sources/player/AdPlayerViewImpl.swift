@@ -4,7 +4,7 @@ import SwiftUI
 import sdk_core
 
 class AdPlayerViewImpl: AdPlayerView {
-    let logger = FLogging().logger
+    let logger = FLogging(tag: "AdPlayerView").logger
 
     var flowerAdView: FlowerAdView
     lazy var adPlayerViewImplBody = AdPlayerViewImplBody(flowerAdView: flowerAdView)
@@ -26,17 +26,21 @@ class AdPlayerViewImpl: AdPlayerView {
     }
 
     func show() {
-        logger.debug { "Showing AdPlayerView" }
-        flowerAdView.isAdPlayerViewVisible = true
+        DispatchQueue.main.async {
+            self.logger.debug { "Showing AdPlayerView" }
+            self.flowerAdView.isAdPlayerViewVisible = true
+        }
     }
 
     func hide() {
-        logger.debug { "Hiding AdPlayerView" }
-        flowerAdView.isAdPlayerViewVisible = false
+        DispatchQueue.main.async {
+            self.logger.debug { "Hiding AdPlayerView" }
+            self.flowerAdView.isAdPlayerViewVisible = false
+        }
     }
 
-    func isShow() -> Bool {
-        return flowerAdView.isAdPlayerViewVisible
+    func isShow() -> any DeferredStub {
+        return DeferredStubImpl(task: Task { KotlinBoolean(value: flowerAdView.isAdPlayerViewVisible) })
     }
 
     func addPlayerLayer(playerLayer: AVPlayerLayer) {

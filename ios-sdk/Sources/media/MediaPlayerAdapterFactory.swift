@@ -5,42 +5,33 @@ import MobileVLCKit
 #endif
 
 class MediaPlayerAdapterFactory: sdk_core.SdkContainerBeanFactory {
-    func create(args: KotlinArray<AnyObject>) throws -> KotlinWrapped<AnyObject> {
-        let mediaPlayerHook = args.get(index: 0) as! MediaPlayerHook
-        let flowerAdsManager = args.get(index: 1) as! FlowerAdsManagerImpl
+    private let logger = FLogging(tag: nil).logger
 
-        if let avplayer = mediaPlayerHook.getPlayer() as? AVQueuePlayer {
-            return KotlinWrapped(value: AVQueuePlayerAdapter(mediaPlayerHook: mediaPlayerHook, flowerAdsManager: flowerAdsManager))
+    func create(args: KotlinArray<AnyObject>) throws -> KotlinWrapped<AnyObject> {
+        let mediaPlayerHook = args.get(index: 1) as! MediaPlayerHook
+        let adsManagerListener = args.get(index: 2) as! FlowerAdsManagerListener
+        let player = mediaPlayerHook.getPlayer()
+
+        if let avplayer = player as? AVQueuePlayer {
+            logger.info { "Using AVQueuePlayerAdapter" }
+            return KotlinWrapped(value: AVQueuePlayerAdapter(mediaPlayerHook: mediaPlayerHook, adsManagerListener: adsManagerListener))
         }
 
         #if canImport(MobileVLCKit)
-        if let vlcMediaPlayer = mediaPlayerHook.getPlayer() as? VLCMediaPlayer {
-            return KotlinWrapped(value: VLCPlayerAdapter(mediaPlayerHook: mediaPlayerHook, flowerAdsManager: flowerAdsManager))
-        }
-
-        if let vlcMediaListPlayer = mediaPlayerHook.getPlayer() as? VLCMediaListPlayer {
-            return KotlinWrapped(value: VLCPlayerAdapter(mediaPlayerHook: mediaPlayerHook, flowerAdsManager: flowerAdsManager))
+        if let vlcMediaListPlayer = player as? VLCMediaListPlayer {
+            logger.info { "Using VLCMediaListPlayerAdapter" }
+            return KotlinWrapped(value: VLCMediaListPlayerAdapter(mediaPlayerHook: mediaPlayerHook, adsManagerListener: adsManagerListener))
         }
         #endif
 
-        throw UnsupportedPlayerException()
-    }
-}
-
-class UnsupportedPlayerException : KotlinException {
-    init() {
-        super.init(
-            message: """
-                Not Supported Player.
-                Supported Players are:
-                - AVPlayer
-                - VLCMediaPlayer
-                - VLCMediaListPlayer
-                """
+        throw Throwable(
+            message: UnsupportedMediaPlayerExceptionKt.formatUnsupportedMediaPlayerExceptionString(
+                players: PlatformList(array: [
+                    "AVPlayer",
+                    "VLCMediaListPlayer",
+                ]),
+                received: player == nil ? "nil" : String(describing: type(of: player!))
+            )
         )
-    }
-
-    required init(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 }

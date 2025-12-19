@@ -13,10 +13,6 @@ class CacheServiceImpl: CacheService {
         )
     }
 
-    override var fileSaveQueue: ConcurrentQueue {
-        ConcurrentQueue()
-    }
-
     override init() {
         super.init()
 
@@ -25,19 +21,19 @@ class CacheServiceImpl: CacheService {
             withIntermediateDirectories: true,
             attributes: nil
         )
-        logger.info { "CacheService: Using cache dir: \(self.cacheDir.path)" }
+        logger.info { "CacheService: Using cache dir: \((self.cacheDir as! PlatformFileImpl).path)" }
 
         try? listTempFiles().forEach { file in
             try file.delete()
         }
     }
 
-    override func getFreeStorageSize() -> Int64 {
-        guard let systemAttributes = try? FileManager.default.attributesOfFileSystem(forPath: cacheDir.path),
+    override func getFreeStorageSize() throws -> KotlinWrapped<KotlinLong> {
+        guard let systemAttributes = try? FileManager.default.attributesOfFileSystem(forPath: (cacheDir as! PlatformFileImpl).path),
               let freeSize = systemAttributes[.systemFreeSize] as? NSNumber else {
-            return 0
+            return KotlinWrapped(value: KotlinLong(0))
         }
 
-        return freeSize.int64Value
+        return KotlinWrapped(value: KotlinLong(value: Int64(freeSize.int64Value)))
     }
 }

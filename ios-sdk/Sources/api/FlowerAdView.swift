@@ -4,7 +4,7 @@ import SwiftUI
 import sdk_core
 
 public class FlowerAdView: FlowerAdViewStub, ObservableObject {
-    let logger = FLogging().logger
+    let logger = FLogging(tag: "FlowerAdView").logger
 
     @Published var isFlowerAdViewVisible = false
     @Published var isAdPlayerViewVisible = false
@@ -39,23 +39,21 @@ public class FlowerAdView: FlowerAdViewStub, ObservableObject {
     }
 
     public func show() {
-        logger.debug { "Showing FlowerAdView" }
-        self.isFlowerAdViewVisible = true
-        self.flowerAdUIView.show()
-        self.adPlayerView.show()
-        self.googleAdView.show()
+        DispatchQueue.main.async {
+            self.logger.debug { "Showing FlowerAdView" }
+            self.isFlowerAdViewVisible = true
+        }
     }
 
     public func hide() {
-        logger.debug { "Hiding FlowerAdView" }
-        self.isFlowerAdViewVisible = false
-        self.flowerAdUIView.hide()
-        self.adPlayerView.hide()
-        self.googleAdView.hide()
+        DispatchQueue.main.async {
+            self.logger.debug { "Hiding FlowerAdView" }
+            self.isFlowerAdViewVisible = false
+        }
     }
 
-    public func isShow() -> Bool {
-        return isFlowerAdViewVisible
+    public func isShow() -> any DeferredStub {
+        return DeferredStubImpl(task: Task { KotlinBoolean(value: isFlowerAdViewVisible) })
     }
 
     public struct FlowerAdViewBody: View {
@@ -83,23 +81,35 @@ public class FlowerAdView: FlowerAdViewStub, ObservableObject {
     }
 
     public class HostingController: UIHostingController<FlowerAdViewBody> {
-        public let adView = FlowerAdView()
+        public private(set) var adView: FlowerAdView
 
         var cancellables = Set<AnyCancellable>()
 
         public init() {
+            self.adView = FlowerAdView()
             super.init(rootView: adView.body)
+            setupView()
+        }
+
+        public init(adView: FlowerAdView) {
+            self.adView = adView
+            super.init(rootView: adView.body)
+            setupView()
         }
 
         @MainActor @preconcurrency required dynamic init?(coder aDecoder: NSCoder) {
+            self.adView = FlowerAdView()
             super.init(coder: aDecoder, rootView: adView.body)
+            setupView()
         }
 
         public override func viewDidLoad() {
             super.viewDidLoad()
 
             view.backgroundColor = .clear
+        }
 
+        private func setupView() {
             adView.$isFlowerAdUIViewVisible
                 .sink { [weak self] isFlowerAdUIViewVisible in
                     self?.view.isUserInteractionEnabled = isFlowerAdUIViewVisible

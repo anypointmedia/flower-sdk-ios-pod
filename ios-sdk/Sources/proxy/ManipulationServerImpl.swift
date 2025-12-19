@@ -26,20 +26,18 @@ class MSPlayerObserver: NSObject {
 class ManipulationServerImpl: ManipulationServer {
     private let server = HttpServer()
     private var observer: MSPlayerObserver?
-    var logger = FLogging().logger
+    var logger = FLogging(tag: nil).logger
 
     private var lastServerPort: in_port_t = 0
 
-    override func serve() -> String? {
+    override func serve() throws -> String {
         let freePort = findFreePort()
         startServer(address: "127.0.0.1", port: freePort)
 
         if freePort == 0 {
-            logger.error{"Error: No free port available."}
-            // Can't declare throw/throws, instead set to "" and in LinearTVAdHandler.kt check for .localEndpoint == ""
-            return nil
+            throw Throwable(message: "No free port available.")
         } else {
-            if let player = flowerAdsManager.mediaPlayerHook?.getPlayer() as? AVPlayer {
+            if let player = mediaPlayerHook?.getPlayer() as? AVPlayer {
                 observer = MSPlayerObserver(player: player) { player, keyPath in
                     if keyPath == "rate" {
                         if player.status == .readyToPlay && player.rate > 0.0 {
@@ -121,13 +119,14 @@ class ManipulationServerImpl: ManipulationServer {
 
     private func checkServerAliveAndRestart() {
         let requestBuilder = Ktor_client_coreHttpRequestBuilder()
-        requestBuilder.ios_url(urlString: localEndpoint! + "/ping")
+        requestBuilder.ios_url(urlString: localEndpoint + "/ping")
 
         logger.verbose { "ping to server: \(self.localEndpoint)"}
 
         var response = try? httpClient.ios_requestSync(builder: requestBuilder)
 
         if (response == nil) {
+            logger.info { "Proxy server healthcheck failed. Restarting server." }
             startServer(address: "127.0.0.1", port: lastServerPort)
         }
     }
@@ -177,9 +176,10 @@ class ManipulationServerImpl: ManipulationServer {
         }
     }
 
-    override func stop() {
-        super.stop()
+    override func stop_() throws {
+        try super.stop_()
         observer?.destroy()
+        observer = nil
         server.stop()
     }
 }

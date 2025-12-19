@@ -4,8 +4,8 @@ import AVFoundation
 import SwiftUI
 import sdk_core
 
-class FlowerAdPlayerImpl: AdPlayer {
-    private var logger = FLogging().logger
+class AdPlayerImpl: AdPlayer {
+    private var logger = FLogging(tag: "AdPlayerImpl").logger
     private let sdkContainer = sdk_core.SdkContainer.companion.getInstance()
     private var isAdPlaying = false
     private var totalDuration: Int32 = -1
@@ -51,7 +51,6 @@ class FlowerAdPlayerImpl: AdPlayer {
                 for item in player!.items() {
                     NotificationCenter.default.addObserver(self, selector: #selector(adPlayerDidFinishPlaying(_:)), name: .AVPlayerItemDidPlayToEndTime, object: item)
                 }
-                logger.info { "ad player load" }
                 adPlayerCallbacks.onLoaded(mediaUrl: mediaUrls[0], duration: totalDuration)
             } catch let error {
                 logger.error { "failed to load play set \(error)" }
@@ -67,31 +66,13 @@ class FlowerAdPlayerImpl: AdPlayer {
     }
 
     func next() {
-        // In the case of AVPlayer
-//        guard let player = player else {
-//            return
-//        }
-//
-//        guard let currentItem = player.currentItem else {
-//           return
-//        }
-//
-//        if let currentAsset = currentItem.asset as? AVURLAsset,
-//           let currentIndex = mediaUrls.firstIndex(where: { $0 == currentAsset.url.absoluteString }),
-//           currentIndex < mediaUrls.count - 1 {
-//            // There is a next item in the queue
-//            let nextItem = AVPlayerItem(url: URL(string: mediaUrls[currentIndex + 1])!)
-//            player.replaceCurrentItem(with: nextItem)
-//            player.seek(to: .zero)
-//            play()
-//        } else {
-//            // No next item, stop playback
-//            stop()
-//        }
+        guard let player = self.player else {
+            stop()
+            return
+        }
 
-        // In the case of AVQueuePlayer
-        if player?.canInsert(player!.currentItem!, after: nil) == true {
-            player?.advanceToNextItem()
+        if player.items().index(of: player.currentItem!)! < player.items().count - 1 {
+            player.advanceToNextItem()
         } else {
             stop()
         }
@@ -197,20 +178,19 @@ class FlowerAdPlayerImpl: AdPlayer {
         adPlayerCallbacks.removeCallback(callback: adPlayerCallback)
     }
 
-
-    func getProgress() -> AdProgress {
+    func getCurrentAdProgress() -> any DeferredStub {
         guard let player = self.player else {
-            return AdProgress.companion.NOT_READY
+            return DeferredStubImpl(task: Task { AdProgress.companion.NOT_READY })
         }
         
         let playTime: Double = player.currentTime().seconds * 1000
         let playingItemCount = player.items().count
         
         if playingItemCount == 0 {
-            return AdProgress.companion.NOT_READY
+            return DeferredStubImpl(task: Task { AdProgress.companion.NOT_READY })
         }
                 
-        return AdProgress(currentTime: Int32(exactly: playTime.rounded() ) ?? 0, duration: Int32(durations[durations.count - playingItemCount]))
+        return DeferredStubImpl(task: Task { AdProgress(currentTime: Int32(exactly: playTime.rounded() ) ?? 0, duration: Int32(durations[durations.count - playingItemCount])) })
     }
 
     func getCurrentPeriodIndex() -> Int {
@@ -283,8 +263,12 @@ class FlowerAdPlayerImpl: AdPlayer {
         player?.play()
     }
 
-    func isPause() -> Bool {
-        return player?.rate == 0.0
+    func isPause() -> any DeferredStub {
+        return DeferredStubImpl(task: Task { KotlinBoolean(value: await player?.rate == 0.0) })
     }
 
+    func playNextItem_() -> any DeferredStub {
+        next()
+        return DeferredStubImpl(task: Task { true })
+    }
 }
