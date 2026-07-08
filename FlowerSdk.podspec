@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
 
   s.description      = 'Flower SDK for iOS'
   s.homepage         = 'https://anypointmedia.atlassian.net/wiki/x/pAB8eg'
-  s.license          = { :type => 'MIT', :file => 'LICENSE' }
+  s.license          = { :type => 'Commercial', :file => 'LICENSE' }
   s.author           = { 'Anypoint Media' => 'dev@anypointmedia.com' }
   s.source           = { :git => 'https://github.com/anypointmedia/flower-sdk-ios-pod.git', :tag => s.version.to_s }
 
