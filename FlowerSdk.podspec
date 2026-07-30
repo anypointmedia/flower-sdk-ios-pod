@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'FlowerSdk'
-  s.version          = '2.3.8'
+  s.version          = '2.3.9'
   s.summary          = 'Flower SDK for iOS'
 
 # This description is used to generate tags and improve search results.
@@ -18,7 +18,7 @@ Pod::Spec.new do |s|
 #   * Finally, don't worry about the indent, CocoaPods strips it!
 
   s.description      = 'Flower SDK for iOS'
-  s.homepage         = 'https://anypointmedia.atlassian.net/wiki/x/pAB8eg'
+  s.homepage         = 'https://flower-docs.anypoint.tv/docs/category/ios'
   s.license          = { :type => 'Commercial', :file => 'LICENSE' }
   s.author           = { 'Anypoint Media' => 'dev@anypointmedia.com' }
   s.source           = { :git => 'https://github.com/anypointmedia/flower-sdk-ios-pod.git', :tag => s.version.to_s }
