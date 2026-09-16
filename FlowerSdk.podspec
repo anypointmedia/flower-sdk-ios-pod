@@ -31,8 +31,10 @@ Pod::Spec.new do |s|
   # s.public_header_files = 'Pod/Classes/**/*.h'
   s.vendored_frameworks = 'ios-sdk/Frameworks/sdk_core.xcframework'
 
-  s.default_subspec = :none
-  s.subspec 'MobileVLCKit3' do |subspec|
-    subspec.dependency 'MobileVLCKit', '>3.3.0'
-  end
+  # No MobileVLCKit subspec. The SDK never linked MobileVLCKit - the subspec only added a
+  # dependency line for integrators - but `pod trunk push` builds every declared subspec, and
+  # MobileVLCKit's own podspec declares `ios 9.0`, which Xcode refuses (supported range is 15.0
+  # and up). That failed validation of the whole pod and blocked publishing. Integrators who want
+  # the VLC-backed player declare `pod 'MobileVLCKit'` themselves, next to the deployment-target
+  # post_install hook their Podfile needs anyway; see the MobileVLCKitLinearTv example.
 end
